@@ -1,0 +1,434 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M K Restaurant | QR Menu</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;font-family:Arial,sans-serif;
+ background:#f3f5fa;color:#20283b
+}
+header{
+ background:linear-gradient(120deg,#14243c,#6242b9);
+ color:white;text-align:center;padding:28px 12px
+}
+header h1{margin:0;font-size:30px}
+header p{color:#e2dcff}
+.container{max-width:1100px;margin:auto;padding:16px}
+.panel{
+ background:white;border-radius:15px;
+ padding:17px;margin-bottom:20px;
+ box-shadow:0 3px 12px #0000000c
+}
+input{
+ width:100%;padding:13px;margin:6px 0;
+ border:1px solid #ddd;border-radius:9px;
+ font-size:15px
+}
+.categories{
+ display:flex;gap:9px;overflow-x:auto;
+ padding:10px 0 20px
+}
+.categories button{
+ border:0;border-radius:25px;background:white;
+ padding:13px 18px;white-space:nowrap;
+ font-weight:bold;cursor:pointer
+}
+.categories button.active{
+ background:#315bd0;color:white
+}
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+ gap:16px
+}
+.food{
+ background:white;border-radius:15px;overflow:hidden;
+ box-shadow:0 4px 15px #00000012
+}
+.food img{
+ width:100%;height:160px;object-fit:cover;
+ display:block;background:#eee
+}
+.food-body{padding:13px}
+.food h3{margin:5px 0;font-size:17px}
+.price{color:#098558;font-weight:bold}
+.add,.checkout{
+ border:0;border-radius:9px;color:white;
+ cursor:pointer;font-weight:bold;
+ padding:13px;width:100%
+}
+.add{background:#315bd0}
+.checkout{background:#129568;font-size:17px}
+.cart-item{
+ display:flex;justify-content:space-between;
+ align-items:center;gap:12px;
+ border-bottom:1px solid #eee;padding:12px 0
+}
+.qty button{
+ border:0;background:#e6ecff;
+ border-radius:6px;padding:7px 12px;
+ cursor:pointer
+}
+.total{
+ text-align:right;font-size:22px;
+ font-weight:bold;margin:18px 0
+}
+footer{text-align:center;padding:25px;color:#777}
+@media(max-width:500px){
+ .grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px
+ }
+ .food img{height:115px}
+ .food-body{padding:10px}
+ .food h3{font-size:14px;min-height:34px}
+ header h1{font-size:25px}
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>🍽️ M K RESTAURANT</h1>
+<p>Delicious Food • Fresh Taste • Easy Ordering</p>
+</header>
+
+<main class="container">
+<div class="panel">
+<h3>Customer Details</h3>
+<input id="customerName" placeholder="Enter Your Name">
+<input id="tableNumber" type="number"
+ min="1" placeholder="Table Number">
+</div>
+
+<h2>Our Food Menu</h2>
+<div id="categories" class="categories"></div>
+<div id="foodGrid" class="grid"></div>
+
+<div class="panel" style="margin-top:25px">
+<h2>🛒 Your Cart</h2>
+<div id="cartItems">Your cart is empty.</div>
+<div class="total" id="total">Total: Rs. 0</div>
+<button class="checkout" onclick="placeOrder()">
+Place Order
+</button>
+</div>
+</main>
+
+<footer>© M K Restaurant</footer>
+
+<script>
+const base="https://images.unsplash.com/";
+
+const menu=[
+{id:1,cat:"Pizza",name:"Chicken Tikka Pizza",
+ price:1200,img:"photo-1513104890138-7c749659a591"},
+{id:2,cat:"Pizza",name:"Chicken Fajita Pizza",
+ price:1250,img:"photo-1574071318508-1cdbab80d002"},
+{id:3,cat:"Pizza",name:"BBQ Pizza",
+ price:1350,img:"photo-1565299624946-b28f40a0ae38"},
+{id:4,cat:"Pizza",name:"Cheese Pizza",
+ price:1000,img:"photo-1579751626657-72bc17010498"},
+{id:5,cat:"Pizza",name:"Fries Pizza",
+ price:1100,img:"photo-1593560708920-61dd98c46a4e"},
+
+{id:6,cat:"Burgers",name:"Zinger Burger",
+ price:450,img:"photo-1568901346375-23c9450c58cd"},
+{id:7,cat:"Burgers",name:"Chicken Burger",
+ price:350,img:"photo-1550547660-d9450f859349"},
+{id:8,cat:"Burgers",name:"Beef Burger",
+ price:550,img:"photo-1568901346375-23c9450c58cd"},
+{id:9,cat:"Burgers",name:"Cheese Burger",
+ price:500,img:"photo-1571091718767-18b5b1457add"},
+
+{id:10,cat:"BBQ",name:"Chicken Tikka",
+ price:450,img:"photo-1544025162-d76694265947"},
+{id:11,cat:"BBQ",name:"Malai Boti",
+ price:750,img:"photo-1529193591184-b1d58069ecdd"},
+{id:12,cat:"BBQ",name:"Seekh Kabab",
+ price:400,img:"photo-1599487488170-d11ec9c172f0"},
+{id:13,cat:"BBQ",name:"Chicken Boti",
+ price:650,img:"photo-1532550907401-a500c9a57435"},
+
+{id:14,cat:"Fast Food",name:"French Fries",
+ price:250,img:"photo-1573080496219-bb080dd4f877"},
+{id:15,cat:"Fast Food",name:"Loaded Fries",
+ price:450,img:"photo-1630384060421-cb20d0e0649d"},
+{id:16,cat:"Fast Food",name:"Chicken Nuggets",
+ price:400,img:"photo-1562967914-608f82629710"},
+{id:17,cat:"Fast Food",name:"Club Sandwich",
+ price:500,img:"photo-1528735602780-2552fd46c7af"},
+
+{id:18,cat:"Salan & Sabzi",name:"Chicken Karahi",
+ price:1400,img:"photo-1603894584373-5ac82b2ae398"},
+{id:19,cat:"Salan & Sabzi",name:"Chicken Handi",
+ price:1500,img:"photo-1631452180519-c014fe946bc7"},
+{id:20,cat:"Salan & Sabzi",name:"Mix Vegetable",
+ price:350,img:"photo-1512621776951-a57141f2eefd"},
+{id:21,cat:"Salan & Sabzi",name:"Daal Fry",
+ price:300,img:"photo-1547592180-85f173990554"},
+{id:22,cat:"Salan & Sabzi",name:"Aloo Gobi",
+ price:350,img:"photo-1512058564366-18510be2db19"},
+
+{id:23,cat:"Drinks",name:"Pepsi",
+ price:120,img:"bottle:Pepsi"},
+{id:24,cat:"Drinks",name:"7UP",
+ price:120,img:"bottle:7UP"},
+{id:25,cat:"Drinks",name:"Sprite",
+ price:120,img:"bottle:Sprite"},
+{id:26,cat:"Drinks",name:"Mineral Water",
+ price:80,img:"bottle:Water"},
+{id:27,cat:"Drinks",name:"Fresh Juice",
+ price:250,img:"photo-1600271886742-f049cd451bba"}
+];
+
+let cart={};
+let category="Pizza";
+
+// Fixed bottle illustrations
+function bottleSVG(brand){
+ const colors={
+  Pepsi:["#1656ba","#ffffff","#e52a3e"],
+  "7UP":["#148a3e","#ffffff","#ec1c24"],
+  Sprite:["#0a9855","#ffffff","#f4d521"],
+  Water:["#8ecbe5","#1d5b8b","#ffffff"]
+ };
+ const [color,ink,accent]=colors[brand];
+ const label=brand==="Water"?"WATER":brand;
+ const svg=`
+ <svg xmlns="http://www.w3.org/2000/svg"
+ viewBox="0 0 480 300">
+ <rect width="480" height="300" fill="#f3f7fa"/>
+ <ellipse cx="240" cy="280" rx="65" ry="10"
+ fill="#bccbd3" opacity=".5"/>
+ <rect x="220" y="25" width="40" height="18"
+ rx="4" fill="${color}"/>
+ <path d="M220 43 L260 43 L260 70
+ Q260 80 278 97 L281 255
+ Q280 273 264 275 L216 275
+ Q200 273 199 255 L202 97
+ Q220 80 220 70Z"
+ fill="${color}" stroke="#c8d5db" stroke-width="3"/>
+ <path d="M212 100 L218 80"
+ stroke="white" opacity=".5" stroke-width="7"/>
+ <rect x="200" y="128" width="80" height="93"
+ rx="8" fill="${color}" stroke="white"/>
+ <path d="M210 136 Q232 147 270 136"
+ fill="none" stroke="${accent}" stroke-width="7"/>
+ <text x="240" y="182" text-anchor="middle"
+ fill="${ink}" font-family="Arial"
+ font-size="${brand==="Water"?19:26}"
+ font-weight="900">${label}</text>
+ </svg>`;
+ return "data:image/svg+xml;charset=UTF-8,"+
+ encodeURIComponent(svg);
+}
+
+function imageUrl(item){
+ if(item.img.startsWith("bottle:")){
+  return bottleSVG(item.img.slice(7));
+ }
+ return base+item.img+
+ "?auto=format&fit=crop&w=700&q=85";
+}
+
+// Fallback for unavailable photos
+function fallback(name){
+ const safe=name.replace(/&/g,"&amp;")
+ .replace(/</g,"&lt;").replace(/>/g,"&gt;");
+ const svg=`
+ <svg xmlns="http://www.w3.org/2000/svg"
+ viewBox="0 0 480 300">
+ <rect width="480" height="300" fill="#e8ecf2"/>
+ <text x="240" y="140" text-anchor="middle"
+ font-family="Arial" font-size="23" fill="#31415b">
+ M K Restaurant
+ </text>
+ <text x="240" y="180" text-anchor="middle"
+ font-family="Arial" font-size="18" fill="#52627a">
+ ${safe}
+ </text>
+ </svg>`;
+ return "data:image/svg+xml;charset=UTF-8,"+
+ encodeURIComponent(svg);
+}
+
+// Categories
+function showCategories(){
+ const cats=[...new Set(menu.map(m=>m.cat))];
+ const holder=document.getElementById("categories");
+ holder.innerHTML="";
+ cats.forEach(cat=>{
+  const b=document.createElement("button");
+  b.textContent=cat;
+  b.className=cat===category?"active":"";
+  b.onclick=()=>{
+   category=cat;
+   showCategories();
+   showFood();
+  };
+  holder.appendChild(b);
+ });
+}
+
+// Food cards
+function showFood(){
+ const holder=document.getElementById("foodGrid");
+ holder.innerHTML="";
+ menu.filter(m=>m.cat===category).forEach(item=>{
+  const card=document.createElement("div");
+  card.className="food";
+
+  const img=document.createElement("img");
+  img.src=imageUrl(item);
+  img.alt=item.name;
+  img.loading="lazy";
+  img.onerror=()=>{
+   img.onerror=null;
+   img.src=fallback(item.name);
+  };
+
+  const body=document.createElement("div");
+  body.className="food-body";
+
+  const title=document.createElement("h3");
+  title.textContent=item.name;
+
+  const price=document.createElement("p");
+  price.className="price";
+  price.textContent="Rs. "+item.price;
+
+  const btn=document.createElement("button");
+  btn.className="add";
+  btn.textContent="+ Add to Cart";
+  btn.onclick=()=>addToCart(item.id);
+
+  body.append(title,price,btn);
+  card.append(img,body);
+  holder.appendChild(card);
+ });
+}
+
+// Cart
+function addToCart(id){
+ cart[id]=(cart[id]||0)+1;
+ showCart();
+}
+
+function changeQty(id,amount){
+ cart[id]=(cart[id]||0)+amount;
+ if(cart[id]<=0)delete cart[id];
+ showCart();
+}
+
+function showCart(){
+ const holder=document.getElementById("cartItems");
+ holder.innerHTML="";
+ let total=0;
+
+ Object.keys(cart).forEach(key=>{
+  const id=Number(key);
+  const item=menu.find(m=>m.id===id);
+  if(!item)return;
+  const qty=cart[id];
+  total+=item.price*qty;
+
+  const row=document.createElement("div");
+  row.className="cart-item";
+
+  const info=document.createElement("div");
+  const name=document.createElement("b");
+  name.textContent=item.name;
+  const price=document.createElement("p");
+  price.textContent="Rs. "+item.price*qty;
+  info.append(name,price);
+
+  const controls=document.createElement("div");
+  controls.className="qty";
+
+  const minus=document.createElement("button");
+  minus.textContent="−";
+  minus.onclick=()=>changeQty(id,-1);
+
+  const count=document.createElement("span");
+  count.textContent=" "+qty+" ";
+
+  const plus=document.createElement("button");
+  plus.textContent="+";
+  plus.onclick=()=>changeQty(id,1);
+
+  controls.append(minus,count,plus);
+  row.append(info,controls);
+  holder.appendChild(row);
+ });
+
+ if(Object.keys(cart).length===0){
+  holder.textContent="Your cart is empty.";
+ }
+
+ document.getElementById("total").textContent=
+ "Total: Rs. "+total;
+}
+
+// Demo order
+function placeOrder(){
+ const name=document.getElementById("customerName")
+ .value.trim();
+ const tableInput=document.getElementById("tableNumber")
+ .value.trim();
+ const table=Number(tableInput);
+
+ if(!name||!tableInput||!Number.isInteger(table)||table<1){
+  alert("Enter customer name and valid table number.");
+  return;
+ }
+
+ if(Object.keys(cart).length===0){
+  alert("Please add food to cart.");
+  return;
+ }
+
+ const items=Object.keys(cart).map(key=>{
+  const item=menu.find(m=>m.id===Number(key));
+  return {
+   id:item.id,
+   name:item.name,
+   quantity:cart[item.id],
+   price:item.price
+  };
+ });
+
+ const total=items.reduce(
+  (sum,item)=>sum+item.price*item.quantity,0
+ );
+
+ const order={
+  customer:name,
+  table:table,
+  items:items,
+  total:total,
+  status:"Demo"
+ };
+
+ console.log("Demo Order:",order);
+
+ alert(
+  "M K RESTAURANT\n"+
+  "Customer: "+name+"\n"+
+  "Table: "+table+"\n"+
+  "Total: Rs. "+total+"\n\n"+
+  "Demo order created.\n"+
+  "Backend not connected yet."
+ );
+}
+
+showCategories();
+showFood();
+showCart();
+</script>
+</body>
+</html>
